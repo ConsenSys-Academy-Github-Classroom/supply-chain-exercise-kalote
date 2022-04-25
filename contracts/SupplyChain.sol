@@ -32,7 +32,6 @@ contract SupplyChain {
   event LogShipped(uint sku);
   // <LogReceived event: sku arg>
   event LogReceived(uint sku);
-  event ItemsDebug(Item i, uint sku);
 
   /* 
    * Modifiers
@@ -93,7 +92,7 @@ contract SupplyChain {
     _;
   }
 
-  constructor() {
+  constructor() public {
     // 1. Set the owner to the transaction sender
     owner = msg.sender;
   }
