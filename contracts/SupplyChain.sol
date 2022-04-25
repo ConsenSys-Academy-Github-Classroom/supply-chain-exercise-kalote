@@ -32,6 +32,7 @@ contract SupplyChain {
   event LogShipped(uint sku);
   // <LogReceived event: sku arg>
   event LogReceived(uint sku);
+  event ItemsDebug(Item i, uint sku);
 
   /* 
    * Modifiers
@@ -42,26 +43,25 @@ contract SupplyChain {
     require(msg.sender == owner);
     _;
   }
-  // <modifier: isOwner
 
   modifier verifyCaller (address _address) { 
-    require (msg.sender == _address); 
+    require(msg.sender == _address); 
     _;
   }
 
-  // modifier paidEnough(uint _sku) { 
-  //   require(msg.value >= items[_sku].price); 
-  //   _;
-  // }
+  modifier paidEnough(uint _sku) { 
+    require(msg.value >= items[_sku].price, "not enough money! Pls give me moar!"); 
+    _;
+  }
 
-  // modifier checkValue(uint _sku) {
-  //   //refund them after pay for item (why it is before, _ checks for logic before func)
-  //   _;
-  //   uint _price = items[_sku].price;
-  //   if (msg.value > _price) {
-  //     payable(items[_sku].buyer).transfer(msg.value - _price);
-  //   }
-  // }
+  modifier checkValue(uint _sku) {
+    //refund them after pay for item (why it is before, _ checks for logic before func)
+    _;
+    if (msg.value > items[_sku].price) {
+      uint toRefund = msg.value - items[_sku].price;
+      payable(items[_sku].buyer).transfer(toRefund);
+    }
+  }
 
   // For each of the following modifiers, use what you learned about modifiers
   // to give them functionality. For example, the forSale modifier should
@@ -72,11 +72,11 @@ contract SupplyChain {
   // an Item has been added?
 
   // modifier forSale
-  // modifier forSale(uint _sku) {
-  //   require(items[_sku].state == State.ForSale);
-  //   require(items[_sku].price != 0);
-  //   _;
-  // }
+  modifier forSale(uint _sku) {
+    require(items[_sku].state == State.ForSale);
+    require(items[_sku].price != 0);
+    _;
+  }
   // modifier sold(uint _sku) 
   modifier sold(uint _sku) {
     require(items[_sku].state == State.Sold);
@@ -127,18 +127,10 @@ contract SupplyChain {
   //    - check the value after the function is called to make 
   //      sure the buyer is refunded any excess ether sent. 
   // 6. call the event associated with this function!
-  function buyItem(uint _sku) public payable {
-    // modifier forSale(uint _sku) { // check price is set and not State.ForSale as it's same value as not init
-    require(items[_sku].price != 0, "issue1");
-    // modifier paidEnough(uint _sku) { 
-    require(msg.value >= items[_sku].price, "issue2"); 
-    payable(items[_sku].seller).transfer(msg.value);
+  function buyItem(uint _sku) public payable forSale(_sku) paidEnough(_sku) checkValue(_sku){
+    payable(items[_sku].seller).transfer(items[_sku].price);
     items[_sku].buyer = payable(msg.sender);
     items[_sku].state = State.Sold;
-    if (msg.value > items[_sku].price) {
-      uint toRefund = msg.value - items[_sku].price;
-      payable(items[_sku].buyer).transfer(toRefund);
-    }
     emit LogSold(_sku);
   }
 
