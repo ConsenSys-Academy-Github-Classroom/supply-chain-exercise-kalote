@@ -49,8 +49,8 @@ contract SupplyChain {
     _;
   }
 
-  modifier paidEnough(uint _sku) { 
-    require(msg.value >= items[_sku].price, "not enough money! Pls give me moar!"); 
+  modifier paidEnough(uint _sku) {
+    assert(msg.value >= items[_sku].price); 
     _;
   }
 
